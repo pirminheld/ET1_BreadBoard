@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interaktive Einführung: Wie funktioniert ein Breadboard?</title>
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#172033;
+      --muted:#5b6475;
+      --line:#d8dee9;
+      --accent:#2563eb;
+      --accent2:#0f766e;
+      --danger:#dc2626;
+      --plus:#ef4444;
+      --minus:#2563eb;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --shadow:0 12px 30px rgba(15, 23, 42, .10);
+      --radius:18px;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:linear-gradient(180deg,#eef4ff 0%,var(--bg) 260px);
+      color:var(--text);
+    }
+    header{
+      max-width:1200px;
+      margin:0 auto;
+      padding:34px 20px 18px;
+    }
+    .hero{
+      display:grid;
+      grid-template-columns:1.35fr .8fr auto;
+      gap:22px;
+      align-items:stretch;
+    }
+    .brand-box{display:flex;gap:12px;align-items:flex-start;justify-content:flex-end}
+    .brand-box img{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);object-fit:contain}
+    .brand-logo{width:120px;height:72px;padding:8px}
+    .brand-qr{width:72px;height:72px;padding:5px}
+    h1{
+      font-size:clamp(2rem,4vw,3.7rem);
+      line-height:1.02;
+      margin:0 0 12px;
+      letter-spacing:-.04em;
+    }
+    .subtitle{
+      font-size:1.15rem;
+      color:var(--muted);
+      max-width:780px;
+      margin:0;
+    }
+    .teacher-card,.card{
+      background:rgba(255,255,255,.88);
+      border:1px solid rgba(216,222,233,.8);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .teacher-card{padding:20px}
+    .teacher-card h2{font-size:1.1rem;margin:0 0 10px}
+    .teacher-card p{margin:0 0 12px;color:var(--muted)}
+    .pillrow{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{font-size:.86rem;padding:7px 10px;border-radius:999px;background:#edf2ff;color:#243b76;border:1px solid #cdd9ff}
+    main{max-width:1200px;margin:0 auto;padding:0 20px 50px}
+    .grid{display:grid;grid-template-columns: 1.15fr .85fr;gap:22px;margin-top:18px}
+    .card{padding:22px;margin-bottom:22px}
+    h2{font-size:1.55rem;margin:0 0 14px;letter-spacing:-.02em}
+    h3{font-size:1.15rem;margin:16px 0 8px}
+    p,li{line-height:1.55}
+    p{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    .step-list{counter-reset:step;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+    .step-list li{counter-increment:step;padding:13px 14px 13px 46px;background:#f8fafc;border:1px solid var(--line);border-radius:14px;position:relative}
+    .step-list li:before{content:counter(step);position:absolute;left:12px;top:13px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:700;font-size:.86rem}
+    .controls{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+    button{
+      border:0;
+      border-radius:12px;
+      padding:10px 13px;
+      background:#e8eefc;
+      color:#193266;
+      font-weight:700;
+      cursor:pointer;
+      transition:.15s transform,.15s background;
+    }
+    button:hover{transform:translateY(-1px);background:#dce7ff}
+    button.active{background:var(--accent);color:#fff}
+    button.secondary{background:#edf7f6;color:#075e58}
+    button.danger{background:#fee2e2;color:#991b1b}
+    .board-wrap{overflow:auto;padding:10px;background:#eef2f7;border:1px solid var(--line);border-radius:18px}
+    .breadboard{
+      width:900px;
+      min-height:460px;
+      background:#fff;
+      border:2px solid #cbd5e1;
+      border-radius:26px;
+      box-shadow: inset 0 0 0 8px #f8fafc;
+      padding:26px 30px;
+      position:relative;
+    }
+    .label{font-size:12px;fill:#64748b;font-weight:700;user-select:none}
+    .hole{fill:#293241;stroke:#101828;stroke-width:.5;cursor:pointer}
+    .hole:hover{fill:#111827}
+    .hole.selected{fill:#f59e0b;stroke:#7c2d12;stroke-width:2}
+    .hole.connected{fill:#16a34a;stroke:#064e3b;stroke-width:2}
+    .hole.notconnected{fill:#dc2626;stroke:#7f1d1d;stroke-width:2}
+    .group-highlight{fill:rgba(37,99,235,.12);stroke:#2563eb;stroke-width:2;rx:8}
+    .rail-plus{fill:rgba(239,68,68,.14);stroke:#ef4444;stroke-width:2;rx:8}
+    .rail-minus{fill:rgba(37,99,235,.14);stroke:#2563eb;stroke-width:2;rx:8}
+    .gap{fill:#e5e7eb}
+    .wire{stroke-width:7;stroke-linecap:round;fill:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.20))}
+    .wire-red{stroke:#ef4444}.wire-blue{stroke:#2563eb}.wire-green{stroke:#16a34a}.wire-black{stroke:#111827}.wire-yellow{stroke:#eab308}
+    .component{filter:drop-shadow(0 3px 2px rgba(0,0,0,.18))}
+    .explainbox{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;min-height:82px}
+    .explainbox strong{color:#0f172a}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .notice{border-left:5px solid var(--warn);background:#fff7ed;padding:12px 14px;border-radius:12px;color:#7c2d12}
+    .success{border-left:5px solid var(--ok);background:#ecfdf5;padding:12px 14px;border-radius:12px;color:#064e3b}
+    .dangerbox{border-left:5px solid var(--danger);background:#fef2f2;padding:12px 14px;border-radius:12px;color:#7f1d1d}
+    .quiz .q{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+    .quiz label{display:block;margin:8px 0;cursor:pointer}
+    .feedback{font-weight:700;margin-top:8px}
+    .mini-task{display:grid;gap:10px}
+    select,input[type="text"]{width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);font-size:1rem;background:white}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.92rem}
+    .dot{width:14px;height:14px;border-radius:50%;display:inline-block;background:#293241}.dot.ok{background:var(--ok)}
+    .railmark{width:28px;height:0;border-top:4px solid;display:inline-block;border-radius:3px}.railmark.plus{border-color:var(--plus)}.railmark.minus{border-color:var(--minus)}
+    footer{max-width:1200px;margin:0 auto;padding:18px 20px 40px;color:var(--muted);font-size:.92rem}
+    @media(max-width:900px){.hero,.grid,.two-col{grid-template-columns:1fr}.brand-box{justify-content:flex-start}.breadboard{width:820px}}
+    @media print{button,.controls,.quiz,.mini-task{display:none}.card,.teacher-card{box-shadow:none}.board-wrap{overflow:visible}.breadboard{transform:scale(.82);transform-origin:top left}.grid,.hero{display:block}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="hero">
+    <div>
+      <h1>Wie funktioniert ein Breadboard?</h1>
+      <p class="subtitle">Eine interaktive Einführung für den Aufbau einfacher elektronischer Schaltungen ohne Löten.</p>
+    </div>
+    <aside class="teacher-card">
+      <h2>Lernziel</h2>
+      <p>Sie können erklären, welche Löcher intern verbunden sind, wozu die Stromschienen dienen und warum Bauteile richtig über den Mittelgraben gesteckt werden müssen.</p>
+      <div class="pillrow">
+        <span class="pill">Breadboard</span>
+        <span class="pill">Reihenschaltung</span>
+        <span class="pill">Parallelschaltung</span>
+      </div>
+    </aside>
+    <div class="brand-box" aria-label="Logo und QR-Code">
+      <img class="brand-logo" src="FTS_logo.png" alt="FTS-Logo">
+      <img class="brand-qr" src="QRCode.png" alt="QR-Code zur Seite">
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="grid">
+    <div class="card">
+      <h2>1. Das Grundprinzip</h2>
+      <p>Ein Breadboard ist eine Steckplatine. Man steckt Bauteile und Drähte in die Löcher. Unter der Kunststoffoberfläche sitzen Metallkontakte. Dadurch sind bestimmte Löcher elektrisch miteinander verbunden.</p>
+      <p>Wichtig ist: <strong>Nicht jedes Loch ist mit jedem anderen Loch verbunden.</strong> Die Verbindung hängt vom Bereich auf dem Breadboard ab.</p>
+      <ol class="step-list">
+        <li><strong>Stromschienen außen:</strong> Die langen Reihen an den Rändern werden meist für Plus und Minus verwendet.</li>
+        <li><strong>Arbeitsbereich innen:</strong> In jeder Spalte sind meist fünf Löcher miteinander verbunden.</li>
+        <li><strong>Mittelgraben:</strong> Links und rechts vom Graben besteht keine elektrische Verbindung. Hier kann man ICs oder Bauteile mit zwei Anschlussseiten einsetzen.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>Merksatz</h2>
+      <div class="success">
+        Im Arbeitsbereich sind die fünf Löcher einer Spalte miteinander verbunden. Über den Mittelgraben hinweg sind sie getrennt.
+      </div>
+      <h3>Typischer Fehler</h3>
+      <div class="dangerbox">
+        Beide Anschlüsse eines Bauteils werden in dieselbe verbundene 5er-Gruppe gesteckt. Dann ist das Bauteil elektrisch überbrückt und wirkt nicht richtig in der Schaltung.
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2. Interaktives Breadboard</h2>
+    <p class="muted">Klicken Sie auf zwei Löcher. Die Seite zeigt, ob diese Löcher intern miteinander verbunden sind.</p>
+    <div class="controls">
+      <button id="mode-test" class="active">Verbindungen testen</button>
+      <button id="mode-groups">5er-Gruppen anzeigen</button>
+      <button id="mode-rails">Stromschienen anzeigen</button>
+      <button id="mode-series" class="secondary">Reihenschaltung zeigen</button>
+      <button id="mode-parallel" class="secondary">Parallelschaltung zeigen</button>
+      <button id="reset" class="danger">Zurücksetzen</button>
+    </div>
+    <div class="board-wrap">
+      <svg class="breadboard" id="bb" viewBox="0 0 900 460" role="img" aria-label="Interaktives Breadboard">
+        <rect x="0" y="0" width="900" height="460" rx="26" fill="#ffffff"/>
+        <rect x="420" y="82" width="60" height="300" rx="12" class="gap"/>
+        <text x="450" y="235" class="label" text-anchor="middle" transform="rotate(-90 450 235)">Mittelgraben: keine Verbindung</text>
+        <g id="highlights"></g>
+        <g id="wires"></g>
+        <g id="components"></g>
+        <g id="labels"></g>
+        <g id="holes"></g>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i class="railmark plus"></i> Plus-Schiene</span>
+      <span><i class="railmark minus"></i> Minus-Schiene</span>
+      <span><i class="dot ok"></i> intern verbunden</span>
+      <span><i class="dot"></i> Steckloch</span>
+    </div>
+    <div id="explain" class="explainbox">
+      <strong>Aufgabe:</strong> Klicken Sie zwei Löcher im Arbeitsbereich an. Liegen sie in derselben 5er-Gruppe, sind sie intern verbunden.
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>3. Warum gibt es den Mittelgraben?</h2>
+      <p>Der Mittelgraben trennt die beiden Seiten des Arbeitsbereichs. Dadurch kann ein Bauteil mit zwei Anschlussseiten, zum Beispiel ein IC, so eingesetzt werden, dass die Pins auf der linken Seite nicht automatisch mit den Pins auf der rechten Seite verbunden sind.</p>
+      <div class="notice">
+        Für einzelne Bauteile wie Widerstand oder Taster ist der Mittelgraben ebenfalls hilfreich: Die beiden Anschlüsse können sicher in getrennte Gruppen gesteckt werden.
+      </div>
+    </div>
+    <div class="card">
+      <h2>4. Reihen- und Parallelschaltung</h2>
+      <p>Für den Einstieg reichen Widerstände oder Drahtbrücken. Entscheidend ist, ob der Strom nur einen Weg oder mehrere Wege hat.</p>
+      <div class="two-col">
+        <div class="notice">
+          <strong>Reihenschaltung:</strong> Die Bauteile liegen hintereinander. Der Strom muss nacheinander durch alle Bauteile fließen.
+        </div>
+        <div class="success">
+          <strong>Parallelschaltung:</strong> Die Bauteile liegen nebeneinander an denselben zwei Knoten. Der Strom kann sich auf mehrere Wege aufteilen.
+        </div>
+      </div>
+      <p class="muted" style="margin-top:12px">Mit den Schaltflächen über dem Breadboard können beide Varianten eingeblendet werden.</p>
+    </div>
+  </section>
+
+  <section class="card mini-task">
+    <h2>5. Kleine Diagnose-Aufgabe</h2>
+    <p>Wählen Sie, welche Aussage zu einem Breadboard richtig ist.</p>
+    <select id="diagnose">
+      <option value="">Bitte auswählen …</option>
+      <option value="wrong1">Alle Löcher auf dem Breadboard sind miteinander verbunden.</option>
+      <option value="right">Im Arbeitsbereich sind meist fünf Löcher einer Spalte miteinander verbunden.</option>
+      <option value="wrong2">Der Mittelgraben verbindet die linke und rechte Seite.</option>
+      <option value="wrong3">Die Stromschienen dürfen nie für Plus und Minus verwendet werden.</option>
+    </select>
+    <div id="diag-feedback" class="explainbox">Noch keine Auswahl.</div>
+  </section>
+
+  <section class="card quiz">
+    <h2>6. Mini-Quiz</h2>
+    <div class="q" data-answer="b">
+      <strong>Frage 1:</strong> Was bedeutet es, wenn zwei Löcher intern verbunden sind?
+      <label><input type="radio" name="q1" value="a"> Zwischen ihnen liegt immer eine Batterie.</label>
+      <label><input type="radio" name="q1" value="b"> Sie sind durch einen Metallkontakt elektrisch leitend verbunden.</label>
+      <label><input type="radio" name="q1" value="c"> Sie dürfen nicht gleichzeitig verwendet werden.</label>
+      <div class="feedback"></div>
+    </div>
+    <div class="q" data-answer="c">
+      <strong>Frage 2:</strong> Warum steckt man die beiden Anschlüsse eines Bauteils nicht in dieselbe 5er-Gruppe?
+      <label><input type="radio" name="q2" value="a"> Weil das Bauteil dann grundsätzlich zerstört wird.</label>
+      <label><input type="radio" name="q2" value="b"> Weil dann Plus und Minus automatisch vertauscht werden.</label>
+      <label><input type="radio" name="q2" value="c"> Weil beide Anschlüsse dann elektrisch am selben Punkt liegen und das Bauteil überbrückt ist.</label>
+      <div class="feedback"></div>
+    </div>
+    <div class="q" data-answer="a">
+      <strong>Frage 3:</strong> Wofür nutzt man die langen äußeren Stromschienen typischerweise?
+      <label><input type="radio" name="q3" value="a"> Zur Verteilung von Plus und Minus.</label>
+      <label><input type="radio" name="q3" value="b"> Nur zum Aufbewahren von Drahtbrücken.</label>
+      <label><input type="radio" name="q3" value="c"> Als Mittelgraben für ICs.</label>
+      <div class="feedback"></div>
+    </div>
+    <button id="checkQuiz">Quiz auswerten</button>
+    <div id="quizResult" class="explainbox">Noch nicht ausgewertet.</div>
+  </section>
+</main>
+
+<footer>
+  Erstellt als interaktive Unterrichtsseite. Hinweis: Breadboards können je nach Hersteller leicht unterschiedlich aufgebaut sein. Einige Stromschienen sind in der Mitte unterbrochen.<br>
+  <a href="impressum.html">Impressum</a>
+</footer>
+
+<script>
+(function(){
+  const svgNS = "http://www.w3.org/2000/svg";
+  const holesG = document.getElementById('holes');
+  const labelsG = document.getElementById('labels');
+  const highlightsG = document.getElementById('highlights');
+  const wiresG = document.getElementById('wires');
+  const componentsG = document.getElementById('components');
+  const explain = document.getElementById('explain');
+  const selected = [];
+  const holes = [];
+  let mode = 'test';
+
+  function el(name, attrs){
+    const e = document.createElementNS(svgNS, name);
+    Object.entries(attrs || {}).forEach(([k,v]) => e.setAttribute(k,v));
+    return e;
+  }
+  function text(x,y,t,anchor='middle'){
+    const e = el('text',{x,y,class:'label','text-anchor':anchor});
+    e.textContent=t;
+    labelsG.appendChild(e);
+    return e;
+  }
+  function groupId(type, col, side, rail){
+    if(type === 'rail') return `rail-${rail}`;
+    return `main-${side}-${col}`;
+  }
+  function addHole(x,y,id,group,type){
+    const c = el('circle',{cx:x,cy:y,r:6,class:'hole','data-id':id,'data-group':group,'data-type':type});
+    c.addEventListener('click',()=>selectHole(c));
+    holesG.appendChild(c);
+    holes.push(c);
+  }
+
+  // Rails
+  const railXs = Array.from({length:30},(_,i)=>85+i*24);
+  railXs.forEach((x,i)=>{
+    addHole(x,38,`p${i}`,groupId('rail',0,0,'plus'),'rail');
+    addHole(x,62,`m${i}`,groupId('rail',0,0,'minus'),'rail');
+    addHole(x,398,`p2-${i}`,groupId('rail',0,0,'plus2'),'rail');
+    addHole(x,422,`m2-${i}`,groupId('rail',0,0,'minus2'),'rail');
+  });
+  text(50,42,'+','end'); text(50,66,'−','end'); text(50,402,'+','end'); text(50,426,'−','end');
+  const plusLineTop = el('line',{x1:65,y1:38,x2:795,y2:38,stroke:'#ef4444','stroke-width':3});
+  const minusLineTop = el('line',{x1:65,y1:62,x2:795,y2:62,stroke:'#2563eb','stroke-width':3});
+  const plusLineBot = el('line',{x1:65,y1:398,x2:795,y2:398,stroke:'#ef4444','stroke-width':3});
+  const minusLineBot = el('line',{x1:65,y1:422,x2:795,y2:422,stroke:'#2563eb','stroke-width':3});
+  labelsG.append(plusLineTop,minusLineTop,plusLineBot,minusLineBot);
+
+  // Main breadboard: left and right sides, 24 columns each, 5 rows per side
+  const leftX0 = 92, rightX0 = 500, dx = 13.5, yTop = 112, dy = 22;
+  const rowsTop = ['A','B','C','D','E'];
+  const rowsBot = ['F','G','H','I','J'];
+  rowsTop.forEach((r,ri)=>text(58,yTop+ri*dy+4,r,'middle'));
+  rowsBot.forEach((r,ri)=>text(842,yTop+ri*dy+4,r,'middle'));
+  for(let col=1; col<=24; col++){
+    const xL = leftX0 + (col-1)*dx;
+    const xR = rightX0 + (col-1)*dx;
+    if(col%2===0){ text(xL,96,col); text(xR,96,col+24); }
+    rowsTop.forEach((r,ri)=>addHole(xL,yTop+ri*dy,`${r}${col}`,groupId('main',col,'L'),'main'));
+    rowsBot.forEach((r,ri)=>addHole(xR,yTop+ri*dy,`${r}${col+24}`,groupId('main',col,'R'),'main'));
+  }
+  text(245,350,'Arbeitsbereich links: je 5 Löcher pro Spalte verbunden');
+  text(655,350,'Arbeitsbereich rechts: je 5 Löcher pro Spalte verbunden');
+
+  function clearClasses(){
+    holes.forEach(h=>h.setAttribute('class','hole'));
+    highlightsG.innerHTML=''; wiresG.innerHTML=''; componentsG.innerHTML='';
+    selected.length=0;
+  }
+  function setMode(newMode){
+    mode = newMode;
+    document.querySelectorAll('.controls button').forEach(b=>b.classList.remove('active'));
+    if(newMode==='test') document.getElementById('mode-test').classList.add('active');
+    if(newMode==='groups') document.getElementById('mode-groups').classList.add('active');
+    if(newMode==='rails') document.getElementById('mode-rails').classList.add('active');
+    if(newMode==='series') document.getElementById('mode-series').classList.add('active');
+    if(newMode==='parallel') document.getElementById('mode-parallel').classList.add('active');
+    clearClasses();
+    if(newMode==='test') explain.innerHTML = '<strong>Aufgabe:</strong> Klicken Sie zwei Löcher im Arbeitsbereich an. Liegen sie in derselben 5er-Gruppe, sind sie intern verbunden.';
+    if(newMode==='groups') showGroups();
+    if(newMode==='rails') showRails();
+    if(newMode==='series') showSeries();
+    if(newMode==='parallel') showParallel();
+  }
+  function selectHole(c){
+    if(mode !== 'test') return;
+    if(selected.length===2){ clearClasses(); }
+    c.setAttribute('class','hole selected');
+    selected.push(c);
+    if(selected.length===1){
+      explain.innerHTML = `<strong>Erstes Loch gewählt:</strong> ${c.dataset.id}. Wählen Sie ein zweites Loch.`;
+    }
+    if(selected.length===2){
+      const [a,b] = selected;
+      const same = a.dataset.group === b.dataset.group;
+      a.setAttribute('class', same?'hole connected':'hole notconnected');
+      b.setAttribute('class', same?'hole connected':'hole notconnected');
+      explain.innerHTML = same
+        ? `<strong>Verbunden:</strong> ${a.dataset.id} und ${b.dataset.id} gehören zur gleichen internen Kontaktgruppe. Elektrisch ist das fast so, als wären sie mit einem kurzen Draht verbunden.`
+        : `<strong>Nicht verbunden:</strong> ${a.dataset.id} und ${b.dataset.id} liegen in verschiedenen Kontaktgruppen. Für eine Verbindung benötigen Sie eine Drahtbrücke oder ein Bauteil.`;
+    }
+  }
+  function showGroups(){
+    // show example groups
+    const examples = [
+      {x:leftX0+3*dx-10,y:yTop-11,w:20,h:4*dy+22},
+      {x:leftX0+8*dx-10,y:yTop-11,w:20,h:4*dy+22},
+      {x:rightX0+5*dx-10,y:yTop-11,w:20,h:4*dy+22},
+      {x:rightX0+14*dx-10,y:yTop-11,w:20,h:4*dy+22}
+    ];
+    examples.forEach(r=>highlightsG.appendChild(el('rect',{...r,class:'group-highlight'})));
+    explain.innerHTML = '<strong>5er-Gruppen:</strong> Im Arbeitsbereich sind jeweils fünf Löcher einer senkrechten Spalte intern verbunden. Die blau markierten Beispiele zeigen solche Gruppen.';
+  }
+  function showRails(){
+    highlightsG.appendChild(el('rect',{x:69,y:26,width:725,height:23,class:'rail-plus'}));
+    highlightsG.appendChild(el('rect',{x:69,y:50,width:725,height:23,class:'rail-minus'}));
+    highlightsG.appendChild(el('rect',{x:69,y:386,width:725,height:23,class:'rail-plus'}));
+    highlightsG.appendChild(el('rect',{x:69,y:410,width:725,height:23,class:'rail-minus'}));
+    explain.innerHTML = '<strong>Stromschienen:</strong> Die langen äußeren Reihen werden typischerweise als Plus- und Minus-Verteilung genutzt. Achtung: Bei manchen Breadboards sind diese Schienen in der Mitte unterbrochen.';
+  }
+  function path(d, cls){ wiresG.appendChild(el('path',{d,class:`wire ${cls}`})); }
+  function resistor(x,y,label){
+    const g = el('g',{class:'component'});
+    g.appendChild(el('rect',{x:x,y:y,width:78,height:22,rx:8,fill:'#d9b382',stroke:'#8b5e34','stroke-width':2}));
+    ['#7c2d12','#111827','#dc2626'].forEach((col,i)=>g.appendChild(el('line',{x1:x+16+i*17,y1:y+1,x2:x+16+i*17,y2:y+21,stroke:col,'stroke-width':4})));
+    const t = el('text',{x:x+39,y:y+42,class:'label','text-anchor':'middle'}); t.textContent=label; g.appendChild(t);
+    componentsG.appendChild(g);
+  }
+  function showSeries(){
+    showRails();
+    path('M 165 38 C 165 82, 190 82, 190 135','wire-red');
+    path('M 190 135 C 230 135, 238 145, 260 145','wire-yellow');
+    resistor(260,134,'R1');
+    path('M 338 145 C 385 145, 398 205, 430 205','wire-green');
+    resistor(430,194,'R2');
+    path('M 508 205 C 585 205, 610 335, 610 422','wire-black');
+    // mark nodes
+    componentsG.appendChild(el('circle',{cx:190,cy:135,r:8,fill:'#16a34a',stroke:'#064e3b','stroke-width':2}));
+    componentsG.appendChild(el('circle',{cx:610,cy:422,r:8,fill:'#16a34a',stroke:'#064e3b','stroke-width':2}));
+    explain.innerHTML = '<strong>Reihenschaltung:</strong> R1 und R2 liegen hintereinander. Es gibt nur einen Stromweg: von Plus über R1, dann über R2 zur Minus-Schiene.';
+  }
+  function showParallel(){
+    showRails();
+    path('M 165 38 C 165 88, 210 88, 210 125','wire-red');
+    path('M 210 125 C 270 125, 320 125, 370 125','wire-red');
+    path('M 210 250 C 270 250, 320 250, 370 250','wire-blue');
+    path('M 210 125 L 210 250','wire-green');
+    path('M 370 125 L 370 250','wire-green');
+    resistor(245,114,'R1');
+    resistor(245,239,'R2');
+    path('M 370 250 C 500 250, 610 330, 610 422','wire-black');
+    componentsG.appendChild(el('circle',{cx:210,cy:125,r:8,fill:'#16a34a',stroke:'#064e3b','stroke-width':2}));
+    componentsG.appendChild(el('circle',{cx:370,cy:250,r:8,fill:'#16a34a',stroke:'#064e3b','stroke-width':2}));
+    explain.innerHTML = '<strong>Parallelschaltung:</strong> R1 und R2 liegen an denselben zwei Knoten. Der Strom kann sich auf zwei Zweige aufteilen und danach wieder zusammenfließen.';
+  }
+  document.getElementById('mode-test').addEventListener('click',()=>setMode('test'));
+  document.getElementById('mode-groups').addEventListener('click',()=>setMode('groups'));
+  document.getElementById('mode-rails').addEventListener('click',()=>setMode('rails'));
+  document.getElementById('mode-series').addEventListener('click',()=>setMode('series'));
+  document.getElementById('mode-parallel').addEventListener('click',()=>setMode('parallel'));
+  document.getElementById('reset').addEventListener('click',()=>setMode('test'));
+
+  document.getElementById('diagnose').addEventListener('change',e=>{
+    const box = document.getElementById('diag-feedback');
+    if(e.target.value==='right'){
+      box.className='success';
+      box.innerHTML='<strong>Richtig.</strong> Im Arbeitsbereich sind die fünf Löcher einer Spalte eine gemeinsame elektrische Kontaktgruppe.';
+    } else if(e.target.value===''){
+      box.className='explainbox'; box.textContent='Noch keine Auswahl.';
+    } else {
+      box.className='dangerbox';
+      box.innerHTML='<strong>Nicht ganz.</strong> Entscheidend ist die interne Metallverbindung. Außen sind es lange Stromschienen, innen meistens 5er-Gruppen.';
+    }
+  });
+  document.getElementById('checkQuiz').addEventListener('click',()=>{
+    let score=0,total=0;
+    document.querySelectorAll('.quiz .q').forEach((q,idx)=>{
+      total++;
+      const correct=q.dataset.answer;
+      const chosen=q.querySelector('input:checked');
+      const fb=q.querySelector('.feedback');
+      if(chosen && chosen.value===correct){
+        score++; fb.style.color='var(--ok)'; fb.textContent='Richtig.';
+      } else {
+        fb.style.color='var(--danger)'; fb.textContent='Noch einmal prüfen.';
+      }
+    });
+    const result=document.getElementById('quizResult');
+    result.className = score===total ? 'success' : 'notice';
+    result.innerHTML=`<strong>Ergebnis:</strong> ${score} von ${total} Punkten.`;
+  });
+})();
+</script>
+</body>
+</html>
